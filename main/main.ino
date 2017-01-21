@@ -56,13 +56,10 @@ void setup() {
   pinMode(SELECT, INPUT);
 
   attachInterrupt(0, toggleInterrupt, CHANGE);
-  attachInterrupt(1, toggleSelect, CHANGE);
+  attachInterrupt(1, selectInterrupt, CHANGE);
   reset();
-
-  
 }
 
-// TODO replace with interrupts!
 void loop() {
   if(state == rolling) {
     for(int i = 0; i < 16; i+= 2) {
@@ -116,7 +113,7 @@ void toggleInterrupt() {
   last_interrupt_time = interrupt_time;
 }
 
-void toggleSelect() {
+void selectInterrupt() {
   static unsigned long last_interrupt_time = 0;
   unsigned long interrupt_time = millis();
   if(interrupt_time - last_interrupt_time > DEBOUNCE_TIME) {
