@@ -14,6 +14,7 @@ typedef enum State {
   idle,
   sides,
   rolls,
+  rolling,
   total
 } State;
 
@@ -32,10 +33,21 @@ volatile int faceIndex = 5;
 volatile int currentRollValue = 0;
 volatile State state = idle;
 
+// Animation
+// segments 0x0, 0x8, 0x10, 0x80, 0x40, 0x20, 0x4, 0x2
+
+const byte terminals[16] = { 0x0, 0x8,
+                           0x8, 0x0,
+                           0x10, 0x0,
+                           0x80, 0x0,
+                           0x40, 0x0,
+                           0x0, 0x40,
+                           0x0, 0x20,
+                           0x0, 0x4};
+
 void setup() {
-  delay(2000);
+  //delay(2000);
   Serial.begin(9600);
-  Serial.println("begin");
   pinMode(LATCH, OUTPUT);
   pinMode(DATA, OUTPUT);
   pinMode(CLK, OUTPUT);
@@ -46,11 +58,23 @@ void setup() {
   attachInterrupt(0, toggleInterrupt, CHANGE);
   attachInterrupt(1, toggleSelect, CHANGE);
   reset();
+
+  
 }
 
 // TODO replace with interrupts!
 void loop() {
-  delay(20);
+  if(state == rolling) {
+    for(int i = 0; i < 16; i+= 2) {
+      pushDigit(terminals[i]);
+      pushDigit(terminals[i + 1]);
+      outRegister();
+      delay(60);
+    }
+    roll();
+    state = total;
+    updateDisplay();
+  }
 }
 
 void updateDisplay() {
@@ -78,12 +102,12 @@ void toggleInterrupt() {
     if(digitalRead(TOGGLE) == LOW) {
       Serial.println("Toggle interrupt pressed");
       if(state == idle) {
-        state = rolls;
-      } else if(state == rolls) {
         state = sides;
       } else if(state == sides) {
+        state = rolls;
+      } else if(state == rolls) {
         state = idle;
-      } else { // state == total
+      } else if(state == total) {
         state = idle;
       }
       updateDisplay();
@@ -99,21 +123,20 @@ void toggleSelect() {
     if(digitalRead(SELECT) == LOW) {
       Serial.println("Select interrupt pressed");
       if(state == idle) {
-        roll();
-        state = total;
-      } else if(state == rolls) {
-        rollCount += 1;
-        if(rollCount > maxRolls[faceIndex]) {
-          rollCount = 1;
-        }
+        state = rolling;
       } else if(state == sides) {
         faceIndex += 1;
         if(faceIndex > 5) {
           faceIndex = 0;
         }
         rollCount = 1;
-      } else { // state == total
-        roll();
+      } else if(state == rolls) {
+        rollCount += 1;
+        if(rollCount > maxRolls[faceIndex]) {
+          rollCount = 1;
+        }
+      } else if(state == total) {
+        state = rolling;
       }
       updateDisplay();
     }
@@ -126,7 +149,6 @@ void roll() {
   for(int i = 0; i < rollCount; i++) {
     currentRollValue += random(0, faces[faceIndex]) + 1;
   }
-  Serial.println(currentRollValue);
 }
 
 void reset() {
