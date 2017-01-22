@@ -136,6 +136,9 @@ void selectInterrupt() {
         }
       } else if(state == total) {
         state = rolling;
+      } else { // Assume it's an animation state
+        last_interrupt_time = interrupt_time;
+        return; // So we don't cancel the animation
       }
       updateDisplay();
     }
