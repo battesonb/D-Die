@@ -7,8 +7,7 @@
 #define SELECT 3
 
 // Constants
-#define VIEW_DELAY 2000
-#define DEBOUNCE_TIME 200
+#define DEBOUNCE_TIME 150
 
 typedef enum State {
   idle,
@@ -55,8 +54,11 @@ void setup() {
   pinMode(TOGGLE, INPUT);
   pinMode(SELECT, INPUT);
 
-  attachInterrupt(0, toggleInterrupt, CHANGE);
-  attachInterrupt(1, selectInterrupt, CHANGE);
+  attachInterrupt(0, toggleInterrupt, FALLING);
+  attachInterrupt(1, selectInterrupt, FALLING);
+
+  randomSeed(analogRead(0));  
+
   reset();
 }
 
