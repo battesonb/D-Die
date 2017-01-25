@@ -14,14 +14,15 @@ numbers = [["top", "top-left", "top-right", "bottom-left", "bottom-right", "bott
 
 def main():
     values = {}
+    print("NOTE: we index bit value from right to left starting at 0.")
     for name in names:
-        values[name] = input("Insert the bit value representing the %s: " % name)
+        values[name] = input("Insert the bit index representing the %s: " % name)
     print("The following is a comma delimited hex string representing 0-9")
     final = []
     for number in numbers:
         total = 0
         for i in number:
-            total += values[i]
+            total |= 1 << values[i]
         final.append(total)
     print(', '.join('{}'.format(hex(v)) for v in final))
     raw_input()
